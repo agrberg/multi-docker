@@ -1,0 +1,23 @@
+os: linux
+dist: bionic
+language: generic
+
+services:
+  - docker
+
+before_install:
+  - docker build -t agrberg/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true agrberg/react-test npm test
+
+after_success:
+  - docker build -t agrberg/multi-client ./client
+  - docker build -t agrberg/multi-nginx ./nginx
+  - docker build -t agrberg/multi-server ./server
+  - docker build -t agrberg/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push agrberg/multi-client
+  - docker push agrberg/multi-nginx
+  - docker push agrberg/multi-server
+  - docker push agrberg/multi-worker
